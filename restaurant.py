@@ -45,8 +45,7 @@ class Menu:
     
 
     def displya_menu(self):
-        print([item for item in self.items if item.is_avail == True] 
-    )
+        print([item for item in self.items if item.is_avail == True])
 
 
     def get_len_menu(self):
@@ -85,6 +84,8 @@ class Costomer:
 
 
 class Order:
+    
+    count = 1
 
     def __init__(self, costomer: Costomer, order_number):
         self.costomer = costomer
@@ -92,6 +93,7 @@ class Order:
         self.items = []
         self.status = "pending"
         self.total_price = 0
+        self.count += 1
 
     def add_item(self, item: MenuItem):
         self.items.append(item)
@@ -124,11 +126,11 @@ class Order:
 
 class Staff:
 
-    def __init__(self, name, salary, role):
+    def __init__(self, name, salary):
         self.name = name
         self.salary = salary
         self.energy = 100
-        self.role = role
+        
 
     def work(self):
         self.energy -= 10
@@ -144,13 +146,13 @@ class Staff:
         return self.energy <= 30
     
     def display(self):
-        return f"His name is {self.name}, His salary is {self.salary}, His role is {self.role}, He has {self.energy} energy left"
+        return f"His name is {self.name}, His salary is {self.salary}, He has {self.energy} energy left"
 
 
 class Chef(Staff):
 
-    def __init__(self, name, salary, role, specialty):
-        super().__init__(name, salary, role)
+    def __init__(self, name, salary, specialty):
+        super().__init__(name, salary)
 
 
     def cook_order(self, order: Order):
@@ -165,8 +167,8 @@ class Chef(Staff):
     
 class Waiter(Staff):
 
-    def __init__(self, name, salary, role):
-        super().__init__(name, salary, role)
+    def __init__(self, name, salary):
+        super().__init__(name, salary)
         self.tips = 0
 
     def take_order(self, costumer: Costomer, menu: Menu):
@@ -212,7 +214,8 @@ class Restaurant:
 
     
     def create_order(self, costomer: Costomer):
-        order = Order(costomer, 1)
+        order = Order(costomer, Order.count)
+        self.menu.displya_menu()
         for item in self.menu:
             choose = input("Enter your choice")
             if item.name == choose:
@@ -223,11 +226,13 @@ class Restaurant:
     def process_order(self, order: Order):
         pass
 
+
     def complete_order(self, order: Order):
         self.money += order.get_total_price()
         for item in self.orders:
             if item.order_number == order.order_number:
                 self.orders.remove(item)
+
 
     def pay_salaries(self):
         for person in self.staff:
@@ -237,7 +242,80 @@ class Restaurant:
                 self.money -= Waiter.salary
 
 
-
+    def get_statistic(self):
+        final_numbers = {}
+        final_numbers.update({"staff": len(self.staff)})
+        final_numbers.update({"money_before_salary": self.money})
+        # final_numbers.update({"money_after_salary": self.money})
+        final_numbers.update({"orders": Order.count})
+    
+    
+    def show_menu(self):
+        menu = "Take order press 1 \nView order press 2 \nManage staff press 3 \nEnd day press 4"
+        
+        while True:
+            print(menu)
+            choice = int(input("Enter your choice"))
+            match choice:
+                case 1:
+                    self.create_order(Costomer(input("Enter your name")))
+                    break
+                case 2:
+                    Order.display_order()
+                    break
+                case 3:
+                    match int(input("To hire press 1 \nTo fire press 2")):
+                        case 1:
+                            match int(input("To hire chef press 1 \nTo hire waiter press 2")):
+                                case 1:
+                                    self.hire_staff(Chef(input("Enter chef name"),float(input("Enter hour salary")), input("He is specialize in")))
+                                    break
+                                case 2:
+                                    self.hire_staff(Waiter(input("Enter chef name"), float(input("Enter hour salary"))))                                    
+                            break
+                        case 2:
+                            self.fire_staff(input("Enter the name of the staff you want to fire"))
+                    break
+                case 4:
+                    self.pay_salaries()
+                    print(self.get_statistic())
+                    break
+        
+    def create_items(self, number_of_items):
+        menu = Menu()
+        for _ in range(number_of_items):
+            print("lets creates products")
+            name = input("Enter name ")
+            price = float(input("Enter price "))
+            catagory = input("Enter catagory ")
+            item = MenuItem(name, price, catagory)
+            if item not in menu.items:
+                menu.add_item(item)
+                menu.displya_menu()
+    
+    def run_day(self):
+        waiter1 = Waiter("ben", 40,)
+        chef1 = Chef("Ratatouille", 100, "Meat")
+        self.hire_staff(waiter1)    
+        self.hire_staff(chef1)
+        print(self.create_items(2))
+        self.show_menu()
+        
+        
+        
+    
+class Main:        
+    if __name__ == "__main__":
+        print("Welcome")
+        restaurant_name = input("Pleas enter resturant name ") 
+        restaurant = Restaurant(restaurant_name)
+        restaurant.run_day()
+         
+        
+        
+        
+        
+    
 
 
 
