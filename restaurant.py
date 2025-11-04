@@ -1,16 +1,13 @@
 class MenuItem:
 
-
-    
     def __init__(self, name, price, category, available = True):
         self.name = name
         self.price = price
         self.catagory = category
         self.is_avail = available
        
-
     def get_info(self):
-        return f"The catagory is {self.catagory}, you choose {self.name} and the price is: {self.price}"
+        print( f"The catagory is {self.catagory}, you choose {self.name} and the price is: {self.price}")
         
     def is_available(self):
         return self.is_avail
@@ -18,10 +15,11 @@ class MenuItem:
     def set_available(self, staus):
         if staus == "available":
             self.is_avail = True
-        else:
+        if staus == "sold out":
             self.is_avail = False
 
-    
+
+
 class Menu:
 
     def __init__(self):
@@ -37,21 +35,21 @@ class Menu:
 
 
     def get_item_by_name(self, item_name):
-        return [item for item in self.items if item.name == item_name] 
+        return [item.name for item in self.items if item.name == item_name] 
     
 
     def get_item_by_catagory(self, catagory_name):
-        return [item for item in self.items if item.catagory == catagory_name] 
+        return [item.get_info() for item in self.items if item.catagory == catagory_name] 
     
 
     def displya_menu(self):
-        print([item for item in self.items if item.is_avail == True])
+        print([item.get_info() for item in self.items if item.is_avail == True])
 
 
     def get_len_menu(self):
         return len(self.items)
 
-    
+
 
 class Costomer:
     
@@ -60,14 +58,14 @@ class Costomer:
         self.satisfaction = satisfaction
     
 
-    def increase_satisfaction(self, amount):
-        if sum(self.satisfaction, amount) <= 100:
+    def increase_satisfaction(self, amount: int):
+        if (self.satisfaction + amount) <= 100:
             self.satisfaction += amount
         else:
             print("The max satisfaction is 100")
 
     
-    def decrease_satisfaction(self, amount):
+    def decrease_satisfaction(self, amount: int):
         if self.satisfaction - amount >= 0 :
             self.satisfaction -= amount
         else:
@@ -80,6 +78,7 @@ class Costomer:
 
     def display(self):
         print(f"The name is {self.name}, and he was {self.satisfaction} satisfied")
+
 
 
 
@@ -96,9 +95,19 @@ class Order:
         self.count += 1
 
     def add_item(self, item: MenuItem):
-        self.items.append(item)
-        self.total_price += item.price
-    
+        if item.is_available():
+            self.items.append(item)
+            self.total_price += item.price
+        else:
+            print("sorry, this item is sold out")
+
+
+    def print_order_by_item_name(self):
+        lst = []
+        for item in self.items:
+            lst.append(item.name)
+        return lst
+
 
     def remove_item(self, item_name: MenuItem):
         for item in self.items:
@@ -116,7 +125,7 @@ class Order:
 
 
     def display_order(self):
-        print(f"costumer name {self.costomer.name}, order number {self.order_number}, he order {self.items}, the total price is {self.total_price}, the status is {self.status}")
+        print(f"costumer name {self.costomer.name}, order number {self.order_number}, he order {self.print_order_by_item_name()}, the total price is {self.total_price}, the status is {self.status}")
 
 
     def is_complited(self):
@@ -197,9 +206,9 @@ class Waiter(Staff):
 
 class Restaurant:
     
-    def __init__(self, name):
+    def __init__(self, name, menu):
         self.name = name
-        self.menu = Menu
+        self.menu = menu
         self.staff = [Staff]
         self.orders = [Order]
         self.money = 1000
@@ -213,13 +222,11 @@ class Restaurant:
                 self.staff.remove(staff_name)
 
     
-    def create_order(self, costomer: Costomer):
-        order = Order(costomer, Order.count)
+    def create_order(self, costomer: Costomer, order: Order):
         self.menu.displya_menu()
-        for item in self.menu:
-            choose = input("Enter your choice")
-            if item.name == choose:
-                order.add_item(item)
+        choose = input("Enter your choice ")
+        if self.menu.get_item_by_name(choose) == choose:
+            order.add_item(choose)
         self.orders.append(order)
 
     
@@ -248,68 +255,71 @@ class Restaurant:
         final_numbers.update({"money_before_salary": self.money})
         # final_numbers.update({"money_after_salary": self.money})
         final_numbers.update({"orders": Order.count})
-    
+
+class RunDay:
+    def __init__(self):
+        self.menu = Menu()
+        self.restaurant = Restaurant(input("Pleas enter resturant name "), self.menu)
+        self.waiter1 = Waiter(input("Enter waiter name "), float(input("Enter hour salary ")))
+        self.chef1 = Chef(input("Enter chef name "),float(input("Enter hour salary ")), input("He is specialize in "))
+        self.customer = Costomer(input("Pleas enter client name "))
+        self.order = Order(self.customer, Order.count)
+
     
     def show_menu(self):
         menu = "Take order press 1 \nView order press 2 \nManage staff press 3 \nEnd day press 4"
         
         while True:
             print(menu)
-            choice = int(input("Enter your choice"))
+            choice = int(input("Enter your choice "))
             match choice:
                 case 1:
-                    self.create_order(Costomer(input("Enter your name")))
+                    self.restaurant.create_order(self.customer, self.order)
                     break
                 case 2:
-                    Order.display_order()
+                    self.order.display_order()
                     break
                 case 3:
                     match int(input("To hire press 1 \nTo fire press 2")):
                         case 1:
                             match int(input("To hire chef press 1 \nTo hire waiter press 2")):
                                 case 1:
-                                    self.hire_staff(Chef(input("Enter chef name"),float(input("Enter hour salary")), input("He is specialize in")))
+                                    self.restaurant.hire_staff(self.chef1)
                                     break
                                 case 2:
-                                    self.hire_staff(Waiter(input("Enter chef name"), float(input("Enter hour salary"))))                                    
+                                    self.restaurant.hire_staff(self.waiter1) 
+                                    break                                   
                             break
                         case 2:
-                            self.fire_staff(input("Enter the name of the staff you want to fire"))
+                            self.restaurant.fire_staff(input("Enter the name of the staff you want to fire "))
                     break
                 case 4:
-                    self.pay_salaries()
-                    print(self.get_statistic())
+                    self.restaurant.pay_salaries()
+                    print(self.restaurant.get_statistic())
                     break
         
     def create_items(self, number_of_items):
-        menu = Menu()
         for _ in range(number_of_items):
             print("lets creates products")
             name = input("Enter name ")
             price = float(input("Enter price "))
             catagory = input("Enter catagory ")
             item = MenuItem(name, price, catagory)
-            if item not in menu.items:
-                menu.add_item(item)
-                menu.displya_menu()
+            if item not in self.menu.items:
+                self.menu.add_item(item)
+                self.menu.displya_menu()
     
     def run_day(self):
-        waiter1 = Waiter("ben", 40,)
-        chef1 = Chef("Ratatouille", 100, "Meat")
-        self.hire_staff(waiter1)    
-        self.hire_staff(chef1)
-        print(self.create_items(2))
+        print("Welcome")
+        self.restaurant.hire_staff(self.waiter1)    
+        self.restaurant.hire_staff(self.chef1)
+        self.create_items(2)
         self.show_menu()
-        
-        
-        
     
 class Main:        
     if __name__ == "__main__":
-        print("Welcome")
-        restaurant_name = input("Pleas enter resturant name ") 
-        restaurant = Restaurant(restaurant_name)
-        restaurant.run_day()
+       run = RunDay()
+       run.run_day()
          
         
         
